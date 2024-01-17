@@ -26,18 +26,20 @@ public class MoneyTest {
 
 	@Test
 	public void testGetAmount() {
-		assertEquals(Double.valueOf(100.0), SEK100.getAmount());
-		assertEquals(Double.valueOf(10.0), EUR10.getAmount());
-		assertEquals(Double.valueOf(200.0), SEK200.getAmount());
-		assertEquals(Double.valueOf(20.0), EUR20.getAmount());
-		assertEquals(Double.valueOf(0.0), SEK0.getAmount());
-		assertEquals(Double.valueOf(0.0), EUR0.getAmount());
-		assertEquals(Double.valueOf(-100.0), SEKn100.getAmount());
-		assertEquals(Double.valueOf(100.0), DKK100.getAmount());
+		// Verify the amounts of different money instances
+		assertEquals(Integer.valueOf(10000), SEK100.getAmount());
+		assertEquals(Integer.valueOf(1000), EUR10.getAmount());
+		assertEquals(Integer.valueOf(20000), SEK200.getAmount());
+		assertEquals(Integer.valueOf(2000), EUR20.getAmount());
+		assertEquals(Integer.valueOf(0), SEK0.getAmount());
+		assertEquals(Integer.valueOf(0), EUR0.getAmount());
+		assertEquals(Integer.valueOf(-10000), SEKn100.getAmount());
+		assertEquals(Integer.valueOf(10000), DKK100.getAmount());
 	}
 
 	@Test
 	public void testGetCurrency() {
+		// Verify the currencies of different money instances
 		assertEquals(SEK, SEK100.getCurrency());
 		assertEquals(EUR, EUR10.getCurrency());
 		assertEquals(DKK, DKK100.getCurrency());
@@ -45,24 +47,27 @@ public class MoneyTest {
 
 	@Test
 	public void testToString() {
-		assertEquals("100.0 SEK", SEK100.toString());
-		assertEquals("10.0 EUR", EUR10.toString());
-		assertEquals("100.0 DKK", DKK100.toString());
+		// Verify the string representations of different money instances
+		assertEquals("100 SEK", SEK100.toString());
+		assertEquals("10 EUR", EUR10.toString());
+		assertEquals("100 DKK", DKK100.toString());
 	}
 
 	@Test
 	public void testGlobalValue() {
-		assertEquals(Integer.valueOf(15), SEK100.universalValue());
-		assertEquals(Integer.valueOf(30), SEK200.universalValue());
-		assertEquals(Integer.valueOf(-15), SEKn100.universalValue() );
-		assertEquals(Integer.valueOf(15), EUR10.universalValue());
-		assertEquals(Integer.valueOf(30), EUR20.universalValue());
+		// Verify the global values of different money instances
+		assertEquals(Integer.valueOf(1500), SEK100.universalValue());
+		assertEquals(Integer.valueOf(3000), SEK200.universalValue());
+		assertEquals(Integer.valueOf(-1500), SEKn100.universalValue());
+		assertEquals(Integer.valueOf(1500), EUR10.universalValue());
+		assertEquals(Integer.valueOf(3000), EUR20.universalValue());
 		assertEquals(Integer.valueOf(0), EUR0.universalValue());
-		assertEquals(Integer.valueOf(20), DKK100.universalValue());
+		assertEquals(Integer.valueOf(2000), DKK100.universalValue());
 	}
 
 	@Test
 	public void testEqualsMoney() {
+		// Verify the equality of different money instances
 		assertTrue(EUR0.equals(SEK0));
 		assertTrue(SEK100.equals(EUR10));
 		assertTrue(SEK200.equals(EUR20));
@@ -71,6 +76,7 @@ public class MoneyTest {
 
 	@Test
 	public void testAdd() {
+		// Verify the result of adding different money instances
 		assertEquals(new Money(30000, SEK).getAmount(), SEK100.add(SEK200).getAmount());
 		assertEquals(new Money(20000, SEK).getAmount(), SEK100.add(EUR10).getAmount());
 		assertEquals(new Money(30000, SEK).getAmount(), SEK200.add(EUR10).getAmount());
@@ -79,6 +85,7 @@ public class MoneyTest {
 
 	@Test
 	public void testSub() {
+		// Verify the result of subtracting different money instances
 		assertEquals(new Money(-10000, SEK).getAmount(), SEK100.sub(SEK200).getAmount());
 		assertEquals(new Money(0, SEK).getAmount(), SEK100.sub(EUR10).getAmount());
 		assertEquals(new Money(10000, SEK).getAmount(), SEK200.sub(EUR10).getAmount());
@@ -87,6 +94,7 @@ public class MoneyTest {
 
 	@Test
 	public void testIsZero() {
+		// Verify if different money instances are zero or not
 		assertTrue(SEK0.isZero());
 		assertTrue(EUR0.isZero());
 		assertFalse(EUR10.isZero());
@@ -94,12 +102,14 @@ public class MoneyTest {
 
 	@Test
 	public void testNegate() {
+		// Verify the negation of different money instances
 		assertEquals(new Money(10000, SEK).getAmount(), SEKn100.negate().getAmount());
 		assertEquals(new Money(-1000, EUR).getAmount(), EUR10.negate().getAmount());
 	}
 
 	@Test
 	public void testCompareTo() {
+		// Verify the comparison of different money instances
 		assertEquals(0, EUR10.compareTo(SEK100));
 		assertEquals(0, EUR20.compareTo(SEK200));
 		assertTrue(EUR20.compareTo(SEK100) > 0);

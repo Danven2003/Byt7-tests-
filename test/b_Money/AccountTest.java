@@ -2,96 +2,84 @@ package b_Money;
 
 import org.junit.Before;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 public class AccountTest {
-    Currency SEK, DKK;
-    Bank Nordea;
-    Bank DanskeBank;
-    Bank SweBank;
-    Account testAccount;
+	Currency SEK, DKK;
+	Bank Nordea;
+	Bank DanskeBank;
+	Bank SweBank;
+	Account testAccount;
 
-    @Before
-    public void setUp() throws Exception {
-        SEK = new Currency("SEK", 0.15);
-        SweBank = new Bank("SweBank", SEK);
-        SweBank.openAccount("Alice");
-        testAccount = new Account("Hans", SEK);
-        testAccount.deposit(new Money(10000000, SEK));
+	@Before
+	public void setUp() throws Exception {
 
-        SweBank.deposit("Alice", new Money(1000000, SEK));
-    }
+		SEK = new Currency("SEK", 0.15);
+		SweBank = new Bank("SweBank", SEK);
+		SweBank.openAccount("Alice");
+		testAccount = new Account("Hans", SEK);
+		testAccount.deposit(new Money(10000000, SEK));
 
-    @Test
-    public void testGetBalance() {
-        Money money = new Money(10000000, SEK);
-        assertEquals(money.getAmount(), testAccount.getBalance().getAmount());
-        assertEquals(money.getCurrency(), testAccount.getBalance().getCurrency());
-    }
+		// all tests were failed with NullPointerException
+		SweBank.deposit("Alice", new Money(1000000, SEK));
 
-//	/**
-//	 * Add a timed payment
-//	 * @param id Id of timed payment
-//	 * @param interval Number of ticks between payments
-//	 * @param next Number of ticks till first payment
-//	 * @param amount Amount of Money to transfer each payment
-//	 * @param tobank Bank where receiving account resides
-//	 * @param toaccount Id of receiving account
-//	 */
+	}
 
-    @Test
-    public void testAddRemoveTimedPayment() {
-        testAccount.addTimedPayment("1", 2, 1, new Money(1000, SEK), SweBank, "Alice");
-        assertTrue(testAccount.timedPaymentExists("1"));
+	@Test
+	public void testAddRemoveTimedPayment() {
+		// Ensure no timed payment with ID "T0001" exists initially
+		assertFalse(testAccount.timedPaymentExists("T0001"));
 
-        testAccount.removeTimedPayment("1");
-        assertFalse(testAccount.timedPaymentExists("1"));
-    }
+		// Add a timed payment with ID "T0001"
+		testAccount.addTimedPayment("T0001", 1, 2, new Money(10000, SEK), SweBank, "Alice");
 
-    @Test
-    public void testAddWithdraw() {
-        Money money = new Money(10000, SEK);
-        //balance for testing
-        Double balance = testAccount.getBalance().getAmount();
+		// Verify the existence of the timed payment
+		assertTrue(testAccount.timedPaymentExists("T0001"));
 
-        //withdraw
-        testAccount.withdraw(money);
+		// Remove the timed payment
+		testAccount.removeTimedPayment("T0001");
 
-        //expected result
-        Double expected = balance - money.getAmount();
+		// Confirm the absence of the timed payment
+		assertFalse(testAccount.timedPaymentExists("T0001"));
+	}
 
-        assertEquals(expected, testAccount.getBalance().getAmount());
-    }
+	@Test
+	public void testTimedPayment() throws AccountDoesNotExistException {
+		// Ensure no timed payment with ID "T0001" exists initially
+		assertFalse(testAccount.timedPaymentExists("T0001"));
 
-    @Test
-    public void testTimedPayment() throws AccountDoesNotExistException {
-        String id = "1";
-        int interval = 2;
-        int nextInterval = 3;
-        int moneyAmount = 100000;
-        Money money = new Money(moneyAmount, SEK);
-        String toAccount = "Alice";
-        //for the testing result
-        Double balance = testAccount.getBalance().getAmount();
-        //imitate tick
-        testAccount.addTimedPayment(id, interval, nextInterval, money, SweBank, toAccount);
-        //count next interval ticks until the first transfer will come
-        for (int count = 0; count < nextInterval + 1; count++) {
-            testAccount.tick();
-        }
-        Double expectAfterFirstTick = balance - moneyAmount / 100;
-        //check after the first tick
-        assertEquals(expectAfterFirstTick, testAccount.getBalance().getAmount());
+		// Add a timed payment with ID "T0001" to transfer money to SweBank's Alice account
+		testAccount.addTimedPayment("T0001", 1, 2, new Money(10000, SEK), SweBank, "Alice");
 
-        Double expectAfterTick = expectAfterFirstTick;
-        //loop for checking ticks and values
-        while (testAccount.getBalance().getAmount() > 0) {
-            expectAfterTick = expectAfterTick - moneyAmount / 100;
-            for (int count = 0; count < interval + 1; count++) {
-                testAccount.tick();
-            }
-            assertEquals(expectAfterTick, testAccount.getBalance().getAmount());
-        }
-    }
+		// Verify the initial balance
+		assertEquals(Integer.valueOf(10000000), testAccount.getBalance().getAmount());
+
+		// Advance time and verify the balance and SweBank's Alice account balance
+		testAccount.tick();
+		testAccount.tick();
+		assertEquals(Integer.valueOf(9990000), testAccount.getBalance().getAmount());
+		assertEquals(1010000, SweBank.getBalance("Alice"));
+
+		// Advance time again and verify the balance and SweBank's Alice account balance
+		testAccount.tick();
+		assertEquals(Integer.valueOf(9980000), testAccount.getBalance().getAmount());
+		assertEquals(1020000, SweBank.getBalance("Alice"));
+	}
+
+	@Test
+	public void testAddWithdraw() {
+		// Deposit money and verify the new balance
+		testAccount.deposit(new Money(10000, SEK));
+		assertEquals(Integer.valueOf(10010000), testAccount.getBalance().getAmount());
+
+		// Withdraw money and verify the new balance
+		testAccount.withdraw(new Money(5000, SEK));
+		assertEquals(Integer.valueOf(10005000), testAccount.getBalance().getAmount());
+	}
+
+	@Test
+	public void testGetBalance() {
+		// Verify the initial balance
+		assertEquals(Integer.valueOf(10000000), testAccount.getBalance().getAmount());
+	}
 }

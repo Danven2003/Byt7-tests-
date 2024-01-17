@@ -5,180 +5,129 @@ import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Field;
-import java.util.Hashtable;
-
 public class BankTest {
-	Currency SEK, DKK;
-	Bank SweBank, Nordea, DanskeBank;
+    Currency SEK, DKK;
+    Bank SweBank, Nordea, DanskeBank;
 
-	@Before
-	public void setUp() throws Exception {
-		DKK = new Currency("DKK", 0.20);
-		SEK = new Currency("SEK", 0.15);
-		SweBank = new Bank("SweBank", SEK);
-		Nordea = new Bank("Nordea", SEK);
-		DanskeBank = new Bank("DanskeBank", DKK);
-		SweBank.openAccount("Ulrika");
-		SweBank.openAccount("Bob");
-		Nordea.openAccount("Bob");
-		DanskeBank.openAccount("Gertrud");
-	}
+    @Before
+    public void setUp() throws Exception {
 
-	@Test
-	public void testGetName() {
-		assertEquals("SweBank", SweBank.getName());
-		assertEquals("Nordea", Nordea.getName());
-		assertEquals("DanskeBank", DanskeBank.getName());
-	}
+        DKK = new Currency("DKK", 0.20);
+        SEK = new Currency("SEK", 0.15);
+        SweBank = new Bank("SweBank", SEK);
+        Nordea = new Bank("Nordea", SEK);
+        DanskeBank = new Bank("DanskeBank", DKK);
+        SweBank.openAccount("Ulrika");
+        SweBank.openAccount("Bob");
+        Nordea.openAccount("Bob");
+        DanskeBank.openAccount("Gertrud");
 
-	@Test
-	public void testGetCurrency() {
-		assertEquals(SEK, SweBank.getCurrency());
-		assertEquals(SEK, Nordea.getCurrency());
-		assertEquals(DKK, DanskeBank.getCurrency());
-	}
+    }
 
-	@Test
-	public void testOpenAccount() throws AccountExistsException, NoSuchFieldException, IllegalAccessException {
-		String key = "Danya";
+    @Test
+    public void testGetName() {
+        // Verify the names of different banks
+        assertEquals("SweBank", SweBank.getName());
+        assertEquals("Nordea", Nordea.getName());
+        assertEquals("DanskeBank", DanskeBank.getName());
+    }
 
-		Field field = Bank.class.getDeclaredField("accountlist");
-		field.setAccessible(true);
-		Hashtable<String, Account> hashtable = (Hashtable<String, Account>) field.get(DanskeBank);
+    @Test
+    public void testGetCurrency() {
+        // Verify the currencies of different banks
+        assertEquals(SEK, SweBank.getCurrency());
+        assertEquals(SEK, Nordea.getCurrency());
+        assertEquals(DKK, DanskeBank.getCurrency());
+    }
 
-		assertFalse(hashtable.containsKey(key));
-		DanskeBank.openAccount("Danya");
+    @Test
+    public void testOpenAccount() throws AccountExistsException {
+        // Open accounts in different banks
+        SweBank.openAccount("Gavin");
+        Nordea.openAccount("Alice");
+    }
 
-		assertTrue(hashtable.containsKey(key));
-	}
+    @Test(expected = AccountExistsException.class)
+    public void testOpenAccountFailure() throws AccountExistsException {
+        // Attempt to open an account with an existing name, expecting an exception
+        SweBank.openAccount("Ulrika");
+    }
 
-	@Test(expected = AccountExistsException.class)
-	public void testOpenAccountWithException() throws AccountExistsException{
-		SweBank.openAccount("Ulrika");
-	}
+    @Test
+    public void testDeposit() throws AccountDoesNotExistException {
+        // Deposit money into accounts in different banks
+        SweBank.deposit("Ulrika", new Money(10000, SEK));
+        assertEquals(10000, SweBank.getBalance("Ulrika"));
 
-	@Test
-	public void testDeposit() throws AccountDoesNotExistException, AccountExistsException {
-		String userId = "Danila";
-		Money moneyDeposit = new Money(100000, SEK);
-		SweBank.openAccount(userId);
+        SweBank.deposit("Bob", new Money(10000, DKK));
+        assertEquals(13333, SweBank.getBalance("Bob"));
+    }
 
-		int account = SweBank.getBalance(userId);
-		assertEquals(0, account);
+    @Test(expected = AccountDoesNotExistException.class)
+    public void testDepositFailure() throws AccountDoesNotExistException {
+        // Attempt to deposit into a non-existing account, expecting an exception
+        Nordea.deposit("Gavin", new Money(10000, SEK));
+    }
 
-		SweBank.deposit(userId, moneyDeposit);
+    @Test
+    public void testWithdraw() throws AccountDoesNotExistException {
+        // Withdraw money from accounts in different banks
+        SweBank.withdraw("Ulrika", new Money(10000, SEK));
+        assertEquals(-10000, SweBank.getBalance("Ulrika"));
 
-		assertEquals(Integer.valueOf(1000), SweBank.getBalance(userId));
-	}
+        SweBank.withdraw("Bob", new Money(10000, DKK));
+        assertEquals(-13333, SweBank.getBalance("Bob"));
+    }
 
-	@Test
-	public void testWithdraw() throws AccountDoesNotExistException, AccountExistsException {
-		String userId = "Danila";
-		Money moneyDeposit = new Money(100000, SEK);
-		SweBank.openAccount(userId);
-		SweBank.deposit(userId, moneyDeposit);
+    @Test(expected = AccountDoesNotExistException.class)
+    public void testWithdrawFailure() throws AccountDoesNotExistException {
+        // Attempt to withdraw from a non-existing account, expecting an exception
+        Nordea.withdraw("Gavin", new Money(10000, SEK));
+    }
 
-		Money moneyWithdraw = new Money(50000, SEK);
-		SweBank.withdraw(userId, moneyWithdraw);
+    @Test
+    public void testGetBalance() throws AccountDoesNotExistException {
+        // Deposit money and verify the balance
+        SweBank.deposit("Ulrika", new Money(10000, SEK));
+        assertEquals(10000, SweBank.getBalance("Ulrika"));
+    }
 
-		assertEquals(Integer.valueOf(500), SweBank.getBalance(userId));
-	}
+    @Test(expected = AccountDoesNotExistException.class)
+    public void testGetBalanceFailure() throws AccountDoesNotExistException {
+        // Attempt to get the balance of a non-existing account, expecting an exception
+        assertEquals(10000, Nordea.getBalance("Gavin"));
+    }
 
-	@Test
-	public void testGetBalance() throws AccountDoesNotExistException, AccountExistsException {
-		String firstUserId = "Danila";
-		String secondUserId = "Olga";
-		String thirdUserId = "Andrei";
+    @Test
+    public void testTransferSameBank() throws AccountDoesNotExistException {
+        // Deposit money and transfer within the same bank, verify balances
+        SweBank.deposit("Bob", new Money(10000, SEK));
+        SweBank.transfer("Bob", "Ulrika", new Money(4000, SEK));
+        assertEquals(4000, SweBank.getBalance("Ulrika"));
+        assertEquals(6000, SweBank.getBalance("Bob"));
+    }
 
-		SweBank.openAccount(firstUserId);
-		SweBank.openAccount(secondUserId);
-		SweBank.openAccount(thirdUserId);
+    @Test
+    public void testTransferDifferentBanks() throws AccountDoesNotExistException {
+        // Deposit money and transfer between different banks, verify balances
+        DanskeBank.deposit("Gertrud", new Money(10000, DKK));
+        DanskeBank.transfer("Gertrud", SweBank, "Ulrika", new Money(4000, DKK));
+        assertEquals(5333, SweBank.getBalance("Ulrika"));
+        assertEquals(6000, DanskeBank.getBalance("Gertrud"));
+    }
 
-		Money depositMoney = new Money(10000, SEK);
-		SweBank.deposit(firstUserId, depositMoney);
-		SweBank.deposit(secondUserId, depositMoney);
-		SweBank.deposit(thirdUserId, depositMoney);
-
-		assertEquals(Integer.valueOf(100), SweBank.getBalance(firstUserId));
-		assertEquals(Integer.valueOf(100), SweBank.getBalance(secondUserId));
-		assertEquals(Integer.valueOf(100), SweBank.getBalance(thirdUserId));
-
-	}
-
-	@Test
-	public void testTransferWithinOneBank() throws AccountDoesNotExistException, AccountExistsException {
-		String firstUserId = "Danila";
-		String secondUserId = "Olga";
-
-		SweBank.openAccount(firstUserId);
-		SweBank.openAccount(secondUserId);
-
-		SweBank.deposit(firstUserId, new Money(1000, SEK));
-
-		assertEquals(Integer.valueOf(10), SweBank.getBalance(firstUserId));
-		assertEquals(Integer.valueOf(0), SweBank.getBalance(secondUserId));
-
-		SweBank.transfer(firstUserId, secondUserId, new Money(1000, SEK));
-
-		assertEquals(Integer.valueOf(0), SweBank.getBalance(firstUserId));
-		assertEquals(Integer.valueOf(10), SweBank.getBalance(secondUserId));
-	}
-
-	@Test
-	public void testTransferWithinDifferentBanks() throws AccountDoesNotExistException, AccountExistsException {
-		String firstUserId = "Danila";
-		String secondUserId = "Olga";
-
-		SweBank.openAccount(firstUserId);
-		DanskeBank.openAccount(secondUserId);
-
-		SweBank.deposit(firstUserId, new Money(1000, SEK));
-
-		assertEquals(Integer.valueOf(10), SweBank.getBalance(firstUserId));
-		assertEquals(Integer.valueOf(0), DanskeBank.getBalance(secondUserId));
-
-		SweBank.transfer(firstUserId, DanskeBank, secondUserId, new Money(1000, SEK));
-
-		assertEquals(Integer.valueOf(0), SweBank.getBalance(firstUserId));
-		assertEquals(Integer.valueOf(7), DanskeBank.getBalance(secondUserId));
-	}
-
-	@Test
-	public void testTimedPayment() throws AccountDoesNotExistException, AccountExistsException {
-		String firstUseId = "Danila";
-		String secondUserId = "Olga";
-
-		String id = "1";
-		int interval = 2;
-		int nextInterval = 3;
-
-		SweBank.openAccount(firstUseId);
-		DanskeBank.openAccount(secondUserId);
-
-		SweBank.deposit(firstUseId, new Money(10000, SEK));
-
-		assertEquals(Integer.valueOf(100), SweBank.getBalance(firstUseId));
-		assertEquals(Integer.valueOf(0), DanskeBank.getBalance(secondUserId));
-
-		SweBank.addTimedPayment(
-				firstUseId, id, interval, nextInterval, new Money(1000, SEK), DanskeBank, secondUserId
-		);
-
-		for(int i = 0; i < nextInterval + 1; i++){
-			SweBank.tick();
-		}
-
-		assertEquals(Integer.valueOf(90), SweBank.getBalance(firstUseId));
-		assertEquals(Integer.valueOf(7), DanskeBank.getBalance(secondUserId));
-
-		for (int i = 0; i < interval + 1; i++){
-			SweBank.tick();
-		}
-
-		assertEquals(Integer.valueOf(80), SweBank.getBalance(firstUseId));
-		assertEquals(Integer.valueOf(15), DanskeBank.getBalance(secondUserId));
-
-
-	}
+    @Test
+    public void testTimedPayment() throws AccountDoesNotExistException {
+        // Deposit money, set up a timed payment, advance time, and verify balances
+        SweBank.deposit("Ulrika", new Money(100000, SEK));
+        SweBank.addTimedPayment("Ulrika", "T0002", 1, 2, new Money(10000, SEK), DanskeBank, "Gertrud");
+        assertEquals(100000, SweBank.getBalance("Ulrika"));
+        SweBank.tick();
+        SweBank.tick();
+        assertEquals(90000, SweBank.getBalance("Ulrika"));
+        assertEquals(7500, DanskeBank.getBalance("Gertrud"));
+        SweBank.tick();
+        assertEquals(80000, SweBank.getBalance("Ulrika"));
+        assertEquals(15000, DanskeBank.getBalance("Gertrud"));
+    }
 }

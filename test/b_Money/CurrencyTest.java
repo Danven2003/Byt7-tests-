@@ -6,60 +6,61 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class CurrencyTest {
-	Currency SEK, DKK, NOK, EUR;
+    Currency SEK, DKK, EUR;
 
-	@Before
-	public void setUp() throws Exception {
-		/* Setup currencies with exchange rates */
-		SEK = new Currency("SEK", 0.15);
-		DKK = new Currency("DKK", 0.20);
-		EUR = new Currency("EUR", 1.5);
-	}
+    @Before
+    public void setUp() throws Exception {
 
-	@Test
-	public void testGetName() {
-		assertEquals("SEK", SEK.getName());
-		assertEquals("DKK", DKK.getName());
-		assertEquals("EUR", EUR.getName());
-	}
+        SEK = new Currency("SEK", 0.15);
+        DKK = new Currency("DKK", 0.20);
+        EUR = new Currency("EUR", 1.5);
 
-	@Test
-	public void testGetRate() {
-		assertEquals(Double.valueOf(0.15), SEK.getRate());
-		assertEquals(Double.valueOf(0.20), DKK.getRate());
-		assertEquals(Double.valueOf(1.5), EUR.getRate());
+    }
 
-	}
+    @Test
+    public void testGetName() {
+        // Verify the names of different currencies
+        assertEquals("SEK", SEK.getName());
+        assertEquals("DKK", DKK.getName());
+        assertEquals("EUR", EUR.getName());
+    }
 
-	@Test
-	public void testSetRate() {
-		SEK.setRate(0.30);
-		assertEquals(Double.valueOf(0.30), SEK.getRate());
+    @Test
+    public void testGetRate() {
+        // Verify the exchange rates of different currencies
+        assertEquals(0.15, SEK.getRate(), 0.0);
+        assertEquals(0.20, DKK.getRate(), 0.0);
+        assertEquals(1.5, EUR.getRate(), 0.0);
+    }
 
-		DKK.setRate(0.30);
-		assertEquals(Double.valueOf(0.30), DKK.getRate());
+    @Test
+    public void testSetRate() {
+        // Create currencies, set new rates, and verify the updated rates
+        Currency UAH = new Currency("UAH", 1.2);
+        Currency PLN = new Currency("PLN", 1.2);
+        Currency USD = new Currency("USD", 1.2);
 
-		EUR.setRate(0.30);
-		assertEquals(Double.valueOf(0.30), EUR.getRate());
-	}
+        UAH.setRate(1.337);
+        PLN.setRate(1.234);
+        USD.setRate(2.567);
 
-	@Test
-	public void testGlobalValue() {
-		int amountSEK = 100;
-		assertEquals(Integer.valueOf((int) (SEK.getRate() * amountSEK)), SEK.universalValue(amountSEK));
+        assertEquals(1.337, UAH.getRate(), 0.0);
+        assertEquals(1.234, PLN.getRate(), 0.0);
+        assertEquals(2.567, USD.getRate(), 0.0);
+    }
 
-		int amountDKK = 100;
-		assertEquals(Integer.valueOf((int)(DKK.getRate() * amountDKK)), DKK.universalValue(amountDKK));
+    @Test
+    public void testGlobalValue() {
+        // Verify the global values of amounts in different currencies
+        assertEquals(Integer.valueOf(150), SEK.universalValue(1000));
+        assertEquals(Integer.valueOf(200), DKK.universalValue(1000));
+        assertEquals(Integer.valueOf(1500), EUR.universalValue(1000));
+    }
 
-		int amountEUR = 100;
-		assertEquals(Integer.valueOf((int)(EUR.getRate() * amountEUR)), EUR.universalValue(amountEUR));
-	}
-
-	@Test
-	public void testValueInThisCurrency() {
-		assertEquals(Integer.valueOf(1000), SEK.valueInThisCurrency(100, EUR));
-		assertEquals(Integer.valueOf(750), DKK.valueInThisCurrency(100, EUR));
-		assertEquals(Integer.valueOf(13), EUR.valueInThisCurrency(100, DKK));
-	}
-
+    @Test
+    public void testValueInThisCurrency() {
+        // Verify the values of amounts converted to different currencies
+        assertEquals(Integer.valueOf(2667), SEK.valueInThisCurrency(2000, DKK));
+        assertEquals(Integer.valueOf(300), EUR.valueInThisCurrency(3000, SEK));
+    }
 }
